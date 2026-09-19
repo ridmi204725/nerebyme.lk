@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    font-family: 'Poppins', sans-serif;
+
+    /* Theme Transitions */
+    --transition-speed: 400ms;
+    --transition-timing: ease-in-out;
+
+    /* Default Blue Theme */
+    --primary-grad-start: #0047AB;
+    --primary-grad-end: #20B2AA;
+    --primary-color: #0047AB;
+    --secondary-color: #20B2AA;
+    --accent-color: #17A2B8;
+    --btn-color: #0056CC;
+    --input-border: #17A2B8;
+    --text-active: #FFFFFF;
+}
+
+[data-theme='theme-green'] {
+    --primary-grad-start: #1B5E20;
+    --primary-grad-end: #00897B;
+    --primary-color: #1B5E20;
+    --secondary-color: #00897B;
+    --accent-color: #26A69A;
+    --btn-color: #00695C;
+    --input-border: #26A69A;
+}
+
+[data-theme='theme-purple'] {
+    --primary-grad-start: #4A148C;
+    --primary-grad-end: #7B1FA2;
+    --primary-color: #4A148C;
+    --secondary-color: #7B1FA2;
+    --accent-color: #9C27B0;
+    --btn-color: #6A1B9A;
+    --input-border: #9C27B0;
+}
+
+/* Global Transitions */
+* {
+    transition: background-color var(--transition-speed) var(--transition-timing),
+    background-image var(--transition-speed) var(--transition-timing),
+    border-color var(--transition-speed) var(--transition-timing),
+    color var(--transition-speed) var(--transition-timing),
+    box-shadow var(--transition-speed) var(--transition-timing);
+}
+
+body {
+    @apply bg-white text-dark;
+    overflow-x: hidden;
+}
+
+.glass {
+    @apply bg-white bg-opacity-10 backdrop-blur-xl border border-white border-opacity-20 rounded-3xl transition-all;
+}
+
+/* Custom Theme Support Utility Classes */
+.bg-theme-grad {
+    background: linear-gradient(135deg, var(--primary-grad-start), var(--primary-grad-end));
+}
+
+.text-theme-accent {
+    color: var(--accent-color);
+}
+
+.border-theme-accent {
+    border-color: var(--input-border);
+}
+
+.bg-theme-btn {
+    background-color: var(--btn-color);
+}
+
+input {
+    @apply w-full px-4 py-3 rounded-lg border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all duration-300 bg-white/5 backdrop-blur-sm text-white;
+}
+
+/* Ensure dropdowns can escape their parent boundaries safely */
+.dropdown-container {
+    position: relative;
+    z-index: 40;
+}
+
+.dropdown-menu {
+    position: absolute;
+    z-index: 100 !important; /* Forces dropdown over the footer and cards */
+    display: block;
+}
+
+/* Fix sticky footer layouts without duplication */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.site-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1 0 auto; /* Pushes the footer to the bottom organically */
+}
+
+.site-footer {
+    flex-shrink: 0;
+}
+
+/* ==========================================
+   CONTACT DOCK ANIMATED COMPONENT STYLES
+   ========================================== */
+.contact-dock {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 20px;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 0 20px rgba(255,255,255,.03);
+}
+
+.letter {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    perspective: 800px;
+    cursor: pointer;
+}
+
+.flip {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform .65s cubic-bezier(.2,.8,.2,1);
+}
+
+.letter:hover .flip {
+    transform: rotateY(180deg);
+}
+
+.front,
+.back {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.front {
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: inset 0 0 15px rgba(255,255,255,.03);
+}
+
+.back {
+    transform: rotateY(180deg);
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    font-size: 20px; /* අයිකන ප්‍රමාණය නිවැරදි කිරීමට */
+}
+
+/* අයිකන් නිවැරදිව පෙන්වීම සඳහා විශේෂිත කර ඇත */
+.back i {
+    display: inline-block;
+    transform: scale(1.1);
+}
+
+/* Social Icon Colors */
+.facebook .back { color: #1877f2; }
+.instagram .back { color: #ff2d92; }
+.linkedin .back { color: #0a66c2; }
+.youtube .back { color: #ff0000; }
+.whatsapp .back { color: #25d366; }
+.email .back { color: #00c8ff; }
+.twitter .back { color: #ffffff; }
+
+/* Tooltip Styles */
+.tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: -42px;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 7px 12px;
+    background: white;
+    color: #111;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: .3s ease;
+    z-index: 20;
+    box-shadow: 0 8px 20px rgba(0,0,0,.35);
+}
+
+.tooltip::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: white;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.letter:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Glow Animation */
+.letter:hover .back {
+    animation: iconGlow .8s ease forwards;
+}
+
+@keyframes iconGlow {
+    0% { box-shadow: 0 0 0 transparent; }
+    50% { box-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+    100% { box-shadow: 0 0 15px currentColor; }
+}
+
+.contact-dock:hover .letter {
+    transition: transform .3s ease;
+}
+
+.letter:hover + .letter {
+    transform: translateY(-6px) scale(1.08);
+}
+
+.letter:has(+ .letter:hover) {
+    transform: translateY(-6px) scale(1.08);
+}
+
+/* Mobile Responsive Adjustments */
+@media(max-width:600px) {
+    .contact-dock {
+        gap: 3px;
+        padding: 10px;
+    }
+    .letter {
+        width: 42px;
+        height: 42px;
+    }
+    .front {
+        font-size: 16px;
+    }
+    .back {
+        font-size: 18px;
+    }
+}

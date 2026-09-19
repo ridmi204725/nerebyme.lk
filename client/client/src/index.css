@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Poppins', sans-serif;
+
+  /* Theme Transitions */
+  --transition-speed: 400ms;
+  --transition-timing: ease-in-out;
+
+  /* Default Blue Theme */
+  --primary-grad-start: #0047AB;
+  --primary-grad-end: #20B2AA;
+  --primary-color: #0047AB;
+  --secondary-color: #20B2AA;
+  --accent-color: #17A2B8;
+  --btn-color: #0056CC;
+  --input-border: #17A2B8;
+  --text-active: #FFFFFF;
+}
+
+[data-theme='theme-green'] {
+  --primary-grad-start: #1B5E20;
+  --primary-grad-end: #00897B;
+  --primary-color: #1B5E20;
+  --secondary-color: #00897B;
+  --accent-color: #26A69A;
+  --btn-color: #00695C;
+  --input-border: #26A69A;
+}
+
+[data-theme='theme-purple'] {
+  --primary-grad-start: #4A148C;
+  --primary-grad-end: #7B1FA2;
+  --primary-color: #4A148C;
+  --secondary-color: #7B1FA2;
+  --accent-color: #9C27B0;
+  --btn-color: #6A1B9A;
+  --input-border: #9C27B0;
+}
+
+/* Global Transitions */
+* {
+  transition: background-color var(--transition-speed) var(--transition-timing),
+              background-image var(--transition-speed) var(--transition-timing),
+              border-color var(--transition-speed) var(--transition-timing),
+              color var(--transition-speed) var(--transition-timing),
+              box-shadow var(--transition-speed) var(--transition-timing);
+}
+
+body {
+  @apply bg-white text-dark;
+  overflow-x: hidden;
+}
+
+.glass {
+  @apply bg-white bg-opacity-10 backdrop-blur-xl border border-white border-opacity-20 rounded-3xl transition-all;
+}
+
+/* Custom Theme Support Utility Classes */
+.bg-theme-grad {
+  background: linear-gradient(135deg, var(--primary-grad-start), var(--primary-grad-end));
+}
+
+.text-theme-accent {
+  color: var(--accent-color);
+}
+
+.border-theme-accent {
+  border-color: var(--input-border);
+}
+
+.bg-theme-btn {
+  background-color: var(--btn-color);
+}
+
+input {
+  @apply w-full px-4 py-3 rounded-lg border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all duration-300 bg-white/5 backdrop-blur-sm text-white;
+}
+/* Ensure dropdowns can escape their parent boundaries safely */
+.dropdown-container {
+    position: relative;
+    z-index: 40;
+}
+
+.dropdown-menu {
+    position: absolute;
+    z-index: 100 !important; /* Forces dropdown over the footer and cards */
+    display: block;
+}
+
+/* Fix sticky footer layouts without duplication */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.site-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1 0 auto; /* Pushes the footer to the bottom organically */
+}
+
+.site-footer {
+    flex-shrink: 0;
+}
