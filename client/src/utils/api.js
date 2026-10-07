@@ -1,29 +1,26 @@
 /**
  * Central API base URL resolver.
  *
- * - In LOCAL dev  → uses window.location.hostname:5001  (your local Express server)
- * - In PRODUCTION (Vercel) → uses the same origin with NO port, because vercel.json
- *   rewrites /api/* to the serverless backend function automatically.
+ * Local development:
+ *   http://localhost:5001
  *
- * Set VITE_API_BASE_URL in your Vercel project environment variables to override
- * everything, e.g. if the backend is on a separate Railway/Render deployment.
+ * Production:
+ *   https://api.nearbyme.lk
  */
 
 const getApiBaseUrl = () => {
-  // 1. Explicit env var always wins (set this in Vercel project settings if backend
-  //    is on a separate host like Railway or Render)
+  // Explicit environment variable takes priority
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
 
-  // 2. Local development — backend runs on port 5001
+  // Local development
   if (import.meta.env.DEV) {
     return `${window.location.protocol}//${window.location.hostname}:5001`;
   }
 
-  // 3. Production (Vercel) — backend is served via vercel.json /api/* rewrite
-  //    on the SAME origin. No port needed.
-  return '';
+  // Production
+  return 'https://api.nearbyme.lk';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
