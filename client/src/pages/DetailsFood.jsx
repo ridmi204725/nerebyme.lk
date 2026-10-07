@@ -3,6 +3,7 @@ import PackageGallery from '../components/PackageGallery';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import {
     FaPhoneAlt,
     FaMapMarkerAlt,
@@ -44,12 +45,7 @@ export default function DetailsFood() {
         }));
     };
 
-    const showNotification = (type, text) => {
-        setMessage({ type, text });
-        setTimeout(() => {
-            setMessage({ type: '', text: '' });
-        }, 3500);
-    };
+    const showNotification = (type, text) => notify(type, text);
 
     useEffect(() => {
         try {
@@ -75,7 +71,7 @@ export default function DetailsFood() {
         const fetchRestaurantDetails = async () => {
             try {
                 setLoading(true);
-                const res = await axios.get(`${API_BASE_URL}/api/admin/items/${id}`);
+                const res = await axios.get(`${API_BASE_URL}/api/items/${id}`);
                 let itemData = null;
 
                 if (res.data && res.data.data) {
@@ -123,18 +119,15 @@ export default function DetailsFood() {
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             };
 
-            const updatedReviews = [newReview, ...reviewsList];
-            setReviewsList(updatedReviews);
-
             try {
                 const reviewResponse = await axios.post(
-                    `${API_BASE_URL}/api/admin/items/${id}/reviews`,
+                    `${API_BASE_URL}/api/reviews/items/${id}/reviews`,
                     newReview,
                     { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } }
                 );
                 if (reviewResponse.data?.data) setReviewsList(reviewResponse.data.data);
             } catch (backendErr) {
-                console.log("Backend review endpoint note:", backendErr);
+                throw backendErr;
             }
 
             setReviewComment('');

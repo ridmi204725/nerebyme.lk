@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import { HOTEL_TYPES, HOTEL_TIERS, getHotelCategories, getLegacyHotelMeta } from '../utils/hotelCategories';
 import { FaEdit, FaTrash, FaCheckCircle, FaClock, FaSearch, FaExclamationTriangle, FaChevronLeft, FaChevronRight, FaPlus, FaImages, FaMapMarkedAlt, FaFacebook, FaInstagram, FaTripadvisor, FaStar, FaBed, FaUtensils, FaCalendarAlt, FaUsers } from 'react-icons/fa';
 
@@ -72,12 +73,7 @@ export default function EditPlacePage() {
     const [reviewEditText, setReviewEditText] = useState('');
     const [reviewEditRating, setReviewEditRating] = useState(5);
 
-    const showNotification = (type, text) => {
-        setMessage({ type, text });
-        setTimeout(() => {
-            setMessage({ type: '', text: '' });
-        }, 3500);
-    };
+    const showNotification = (type, text) => notify(type, text);
 
     const fetchItemsList = async () => {
         setTableLoading(true);

@@ -31,7 +31,7 @@
 - Facebook login backend was already present; client now loads the Facebook SDK when `VITE_FACEBOOK_APP_ID` is configured.
 
 ## Important authentication configuration
-Copy `client/.env.example` to `client/.env` and set real provider credentials.
+Copy `client/.env` to `client/.env` and set real provider credentials.
 
 Apple Sign-In requires an Apple Service ID / client ID and a registered redirect URI.
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import {
   FaArrowLeft,
   FaShareAlt,
@@ -76,7 +77,7 @@ export default function DetailsFunction() {
         setLoading(true);
         setError('');
 
-        const res = await axios.get(`${API_BASE_URL}/api/admin/items/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/items/${id}`);
         const data = res.data?.data || res.data;
 
         if (!data) {
@@ -157,7 +158,7 @@ export default function DetailsFunction() {
       }
 
       const response = await axios.post(
-        `${API_BASE_URL}/api/admin/items/${id}/reviews`,
+        `${API_BASE_URL}/api/reviews/items/${id}/reviews`,
         newReview,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

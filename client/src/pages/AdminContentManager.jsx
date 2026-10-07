@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import { FaArrowLeft, FaUpload, FaTrash, FaEdit, FaPlus, FaCheckCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,14 +37,14 @@ export default function AdminContentManager() {
   const chooseFile = e => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 7 * 1024 * 1024) return alert('Please use an image smaller than 7 MB.');
+    if (file.size > 7 * 1024 * 1024) return notify('error', 'Please use an image smaller than 7 MB.');
     const reader = new FileReader();
     reader.onload = () => setForm(f => ({ ...f, url: reader.result }));
     reader.readAsDataURL(file);
   };
 
   const save = async () => {
-    if (!selected || !form.url) return alert('Select an approved item and choose an image.');
+    if (!selected || !form.url) return notify('error', 'Select an approved item and choose an image.');
     try {
       if (form._id) {
         await axios.put(`${API_BASE_URL}/api/admin/items/${selected._id}/packages/${form._id}`, form, { headers });
@@ -54,7 +55,7 @@ export default function AdminContentManager() {
       await load();
       const fresh = await axios.get(`${API_BASE_URL}/api/admin/items/${selected._id}`, { headers });
       setSelected(fresh.data.data);
-    } catch (e) { alert(e.response?.data?.message || 'Could not save package image'); }
+    } catch (e) { notify('error', e.response?.data?.message || 'Could not save package image'); }
   };
 
   const remove = async id => {

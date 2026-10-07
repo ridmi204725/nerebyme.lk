@@ -1,4 +1,5 @@
 import React from 'react';
+import { notify } from '../utils/notifications';
 import { Navigate } from 'react-router-dom';
 
 const SellerRoute = ({ children }) => {
@@ -11,7 +12,7 @@ const SellerRoute = ({ children }) => {
 
   // Only users with role 'seller' or 'admin' can access the Seller Portal
   if (role !== 'seller' && role !== 'admin') {
-    alert("Access Denied: The Seller Portal is restricted to registered Sellers. You can apply to become a seller from your Account Settings.");
+    notify('error', "Access Denied: The Seller Portal is restricted to registered Sellers. You can apply to become a seller from your Account Settings.");
     return <Navigate to="/home" replace />;
   }
 

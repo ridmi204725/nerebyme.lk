@@ -9,13 +9,13 @@ export const verifyToken = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
 
     // Attach the verified user token profile payload to the request
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(450).json({ success: false, message: "Invalid or expired token." });
+    return res.status(401).json({ success: false, message: "Invalid or expired token." });
   }
 };
 

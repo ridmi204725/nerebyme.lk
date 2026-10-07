@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -72,12 +73,7 @@ const Functions = () => {
   const [mode, setMode] = useState(localStorage.getItem('mode') || 'dark');
 
   // Custom Toast පණිවිඩ පෙන්වීම සඳහා වන Helper function එක
-  const showNotification = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => {
-      setMessage({ type: '', text: '' });
-    }, 3500); // තත්පර 3.5 කින් පණිවිඩය ස්වයංක්‍රීයව අතුරුදහන් වේ
-  };
+  const showNotification = (type, text) => notify(type, text);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -163,7 +159,7 @@ const Functions = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!localStorage.getItem('token')) { alert('Please login before adding a listing.'); return; }
+    if (!localStorage.getItem('token')) { notify('error', 'Please login before adding a listing.'); return; }
     try {
       const token = localStorage.getItem('token');
 

@@ -31,12 +31,18 @@ const MainLayout = () => {
   const location = useLocation();
   const [mode, setMode] = useState(localStorage.getItem('mode') || 'dark');
   const [theme, setTheme] = useState(localStorage.getItem('selectedTheme') || 'theme-blue');
-  const [language, setLanguage] = useState(localStorage.getItem('selectedLanguage') || 'English');
+  const [language, setLanguage] = useState(() => {
+    const stored = localStorage.getItem('selectedLanguage') || localStorage.getItem('lang') || 'English';
+    if (stored === 'EN') return 'English';
+    if (stored === 'SI') return 'Sinhala';
+    if (stored === 'TA') return 'Tamil';
+    return ['English', 'Sinhala', 'Tamil'].includes(stored) ? stored : 'English';
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
-  const [greeting, setGreeting] = useState('');
+  const [greetingText, setGreetingText] = useState('');
   const userName = localStorage.getItem('registeredUser') || 'Traveler';
   const userRole = localStorage.getItem('userRole') || 'user';
 
@@ -55,19 +61,36 @@ const MainLayout = () => {
 
   useEffect(() => {
     localStorage.setItem('mode', mode);
+    document.documentElement.setAttribute('data-mode', mode);
+    document.body.setAttribute('data-mode', mode);
   }, [mode]);
 
   useEffect(() => {
     localStorage.setItem('selectedLanguage', language);
+    localStorage.setItem('lang', language === 'Sinhala' ? 'SI' : language === 'Tamil' ? 'TA' : 'EN');
     window.dispatchEvent(new Event('languageChange'));
   }, [language]);
 
   useEffect(() => {
+    const syncLanguage = () => {
+      const stored = localStorage.getItem('selectedLanguage') || localStorage.getItem('lang') || 'English';
+      const normalized = stored === 'EN' ? 'English' : stored === 'SI' ? 'Sinhala' : stored === 'TA' ? 'Tamil' : stored;
+      if (['English', 'Sinhala', 'Tamil'].includes(normalized)) setLanguage(normalized);
+    };
+    window.addEventListener('languageChange', syncLanguage);
+    window.addEventListener('storage', syncLanguage);
+    return () => {
+      window.removeEventListener('languageChange', syncLanguage);
+      window.removeEventListener('storage', syncLanguage);
+    };
+  }, []);
+
+  useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting(t.greeting || 'Good Morning');
-    else if (hour < 17) setGreeting(t.greeting || 'Good Afternoon');
-    else setGreeting(t.greeting || 'Good Evening');
-  }, [t]);
+    if (hour < 12) setGreetingText(language === 'Sinhala' ? 'සුභ උදෑසනක්' : language === 'Tamil' ? 'காலை வணக்கம்' : 'Good Morning');
+    else if (hour < 17) setGreetingText(language === 'Sinhala' ? 'සුභ දවල් වරුවක්' : language === 'Tamil' ? 'மதிய வணக்கம்' : 'Good Afternoon');
+    else setGreetingText(language === 'Sinhala' ? 'සුභ සන්ධ්‍යාවක්' : language === 'Tamil' ? 'மாலை வணக்கம்' : 'Good Evening');
+  }, [language]);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -86,7 +109,6 @@ const MainLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('registeredUser');
     localStorage.removeItem('userRole');
     navigate('/login');
   };
@@ -101,20 +123,20 @@ const MainLayout = () => {
   const isDark = mode === 'dark';
 
   const NAV_LINKS = [
-    { label: t.home, path: '/home', icon: <FaSunIcon /> },
-    { label: t.playAndEarn, path: '/play-and-earn', icon: <FaCoins /> },
-    { label: t.advertise, path: '/advertise', icon: <FaStore /> },
-    { label: t.faqHelp, path: '/faq-help', icon: <FaQuestionCircle /> },
-    { label: t.aboutUs, path: '/about-us', icon: <FaInfoCircle /> },
-    { label: t.feedback, path: '/feedback', icon: <FaEnvelope /> },
+    { label: typeof t.home === 'string' ? t.home : 'Home', path: '/home', icon: <FaSunIcon /> },
+    { label: typeof t.playAndEarn === 'string' ? t.playAndEarn : 'Play & Earn', path: '/play-and-earn', icon: <FaCoins /> },
+    { label: typeof t.advertise === 'string' ? t.advertise : 'Advertise', path: '/advertise', icon: <FaStore /> },
+    { label: typeof t.faqHelp === 'string' ? t.faqHelp : 'FAQ / Help', path: '/faq-help', icon: <FaQuestionCircle /> },
+    { label: typeof t.aboutUs === 'string' ? t.aboutUs : 'About Us', path: '/about-us', icon: <FaInfoCircle /> },
+    { label: typeof t.feedback === 'string' ? t.feedback : 'Feedback', path: '/feedback', icon: <FaEnvelope /> },
   ];
 
   if (userRole === 'seller' || userRole === 'admin') {
-    NAV_LINKS.push({ label: t.sellerPortal, path: '/seller/dashboard', icon: <FaStore /> });
+    NAV_LINKS.push({ label: typeof t.sellerPortal === 'string' ? t.sellerPortal : 'Seller Portal', path: '/seller/dashboard', icon: <FaStore /> });
   }
 
   if (userRole === 'admin') {
-    NAV_LINKS.push({ label: t.adminDashboard, path: '/admin/dashboard', icon: <FaUserShield /> });
+    NAV_LINKS.push({ label: typeof t.adminDashboard === 'string' ? t.adminDashboard : 'Admin Dashboard', path: '/admin/dashboard', icon: <FaUserShield /> });
   }
 
   useEffect(() => {
@@ -156,7 +178,6 @@ const MainLayout = () => {
           <div className="hd-blob blob-3" />
         </div>
 
-        {/* Custom Mobile Header Styles Injection */}
         <style>{`
           @media screen and (max-width: 768px) {
             .hd-nav {
@@ -172,7 +193,6 @@ const MainLayout = () => {
           }
         `}</style>
 
-        {/* Sidebar Drawer Overlay */}
         <AnimatePresence>
           {sidebarOpen && (
               <>
@@ -205,12 +225,12 @@ const MainLayout = () => {
 
                     <div className={`my-5 p-4 rounded-2xl ${isDark ? 'bg-[#161922] border-gray-800 text-white' : 'bg-gray-100 border-gray-200 text-gray-900'} border flex items-center justify-between`}>
                       <div>
-                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} font-semibold`}>{greeting}, {userName.split(' ')[0]}!</p>
+                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} font-semibold`}>{greetingText}, {userName.split(' ')[0]}!</p>
                         <p className="text-sm font-bold text-amber-500 capitalize">{userRole} Account</p>
                       </div>
                       <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 px-3 py-1.5 rounded-xl font-bold text-xs">
                         <FaCoins className="animate-pulse text-amber-500" />
-                        <span>{userPoints} {t.points}</span>
+                        <span>{userPoints} {typeof t.points === 'string' ? t.points : 'Points'}</span>
                       </div>
                     </div>
 
@@ -257,7 +277,7 @@ const MainLayout = () => {
 
                   <div className={`pt-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'} space-y-4`}>
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.language}</span>
+                      <span className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{typeof t.language === 'string' ? t.language : 'Language'}</span>
                       <div className="flex gap-1">
                         {LANGUAGE_OPTIONS.map((opt) => (
                             <button
@@ -272,7 +292,7 @@ const MainLayout = () => {
                     </div>
 
                     <div className={`flex items-center justify-between pt-2 border-t ${isDark ? 'border-gray-800/60' : 'border-gray-100'}`}>
-                      <span className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.darkMode}</span>
+                      <span className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{typeof t.darkMode === 'string' ? t.darkMode : 'Dark Mode'}</span>
                       <div className="premium-switch scale-90 origin-right">
                         <input
                             type="checkbox"
@@ -293,7 +313,7 @@ const MainLayout = () => {
                         className="w-full flex items-center justify-center gap-2 p-3 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white rounded-xl text-xs font-bold transition-all border border-red-500/20 cursor-pointer"
                     >
                       <FaSignOutAlt />
-                      <span>{t.signOut}</span>
+                      <span>{typeof t.signOut === 'string' ? t.signOut : 'Sign Out'}</span>
                     </button>
                   </div>
                 </motion.aside>
@@ -301,7 +321,6 @@ const MainLayout = () => {
           )}
         </AnimatePresence>
 
-        {/* Header Navbar */}
         <motion.nav className={`hd-nav ${scrolled ? 'hd-nav-scrolled' : ''}`} initial={{ y: -80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
           <div className="flex items-center gap-3">
             <button className="hd-sidebar-toggle hd-btn hd-btn-icon cursor-pointer" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -323,9 +342,9 @@ const MainLayout = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 shadow-lg shadow-orange-500/20 cursor-pointer border-none animate-pulse"
             >
               <FaTag size={10} className="animate-bounce" />
-              <span>{t.hotOffers}</span>
+              <span>{typeof t.hotOffers === 'string' ? t.hotOffers : 'Hot Offers'}</span>
             </motion.button>
-            <span className="hd-greeting-pill hidden lg:block">✨ {greeting}, {userName.split(' ')[0]}!</span>
+            <span className="hd-greeting-pill hidden lg:block">✨ {greetingText}, {userName.split(' ')[0]}!</span>
           </div>
 
           <div className="hd-nav-right flex items-center gap-2 sm:gap-3">
@@ -365,7 +384,7 @@ const MainLayout = () => {
               <AnimatePresence>
                 {themeOpen && (
                     <motion.div className="hd-dropdown" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-                      <p className="hd-dd-label" style={{ color: isDark ? '#fff' : '#000' }}>{t.chooseTheme}</p>
+                      <p className="hd-dd-label" style={{ color: isDark ? '#fff' : '#000' }}>{typeof t.chooseTheme === 'string' ? t.chooseTheme : 'Choose Theme'}</p>
                       <div className="hd-theme-dots">
                         {THEMES.map(th => (
                             <button
@@ -412,13 +431,13 @@ const MainLayout = () => {
                         </div>
                       </div>
                       <div className="hd-dd-divider" />
-                      <button className="hd-dd-item" onClick={() => { navigate('/account'); setAccountOpen(false); }}><span className="hd-dd-item-icon"><FaUser /></span>{t.accountSettings || "Account Settings"}</button>
-                      <button className="hd-dd-item" onClick={() => { navigate('/notifications'); setAccountOpen(false); }}><span className="hd-dd-item-icon"><FaBell /></span>{t.notifications}</button>
-                      <button className="hd-dd-item" onClick={() => { navigate('/my-offers'); setAccountOpen(false); }}><span className="hd-dd-item-icon"><FaTag /></span>{t.myOffers || "My Offers"}</button>
+                      <button className="hd-dd-item" onClick={() => { navigate('/account'); setAccountOpen(false); }}><span className="hd-dd-item-icon"><FaUser /></span>{typeof t.accountSettings === 'string' ? t.accountSettings : "Account Settings"}</button>
+                      <button className="hd-dd-item" onClick={() => { navigate('/notifications'); setAccountOpen(false); }}><span className="hd-dd-item-icon"><FaBell /></span>{typeof t.notifications === 'string' ? t.notifications : "Notifications"}</button>
+                      <button className="hd-dd-item" onClick={() => { navigate('/my-offers'); setAccountOpen(false); }}><span className="hd-dd-item-icon"><FaTag /></span>{typeof t.myOffers === 'string' ? t.myOffers : "My Offers"}</button>
 
                       <div className="hd-dd-divider" />
                       <button className="hd-dd-item hd-dd-logout" onClick={handleLogout}>
-                        <span className="hd-dd-item-icon"><FaSignOutAlt /></span>{t.signOut}
+                        <span className="hd-dd-item-icon"><FaSignOutAlt /></span>{typeof t.signOut === 'string' ? t.signOut : "Sign Out"}
                       </button>
                     </motion.div>
                 )}
@@ -431,7 +450,6 @@ const MainLayout = () => {
           <Outlet context={{ isDark, language }} />
         </div>
 
-        {/* Footer (Letter sizes & Icon sizes increased) */}
         <footer className={`w-full ${isDark ? 'bg-black text-[#a0aec0]' : 'bg-gray-200 text-gray-700'} text-sm font-medium border-t ${isDark ? 'border-gray-900/40' : 'border-gray-300'} pt-12 pb-6 px-4 md:px-12 transition-colors duration-300`}>
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 mb-8">
 
@@ -447,9 +465,7 @@ const MainLayout = () => {
                 Sri Lanka's Premier Travel & Lifestyle Platform
               </p>
 
-              {/* Social Media & Freelance Platforms - Split Cleanly into 2 Rows */}
               <div className="flex flex-col gap-2.5 my-2">
-                {/* Row 1 (6 Icons) */}
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" title="YouTube" className="flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white hover:opacity-80 transition-opacity">
                     <i className="fab fa-youtube text-base"></i>
@@ -471,7 +487,6 @@ const MainLayout = () => {
                   </a>
                 </div>
 
-                {/* Row 2 (6 Icons) */}
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <a href="https://fiverr.com" target="_blank" rel="noopener noreferrer" title="Fiverr" className="flex items-center justify-center w-10 h-10 rounded-full bg-green-600 text-white hover:opacity-80 transition-opacity">
                     <i className="fab fa-fiverr text-base"></i>
@@ -496,20 +511,20 @@ const MainLayout = () => {
             </div>
 
             <div className="flex flex-col gap-3 md:pl-12">
-              <h4 className="text-xs font-bold text-amber-500 tracking-widest uppercase">{t.quickLinks}</h4>
+              <h4 className="text-xs font-bold text-amber-500 tracking-widest uppercase">{typeof t.quickLinks === 'string' ? t.quickLinks : 'Quick Links'}</h4>
               <ul className="space-y-2.5">
-                <li><button onClick={() => navigate('/food-hub')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.foodHub}</button></li>
-                <li><button onClick={() => navigate('/dayout')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.dayout}</button></li>
-                <li><button onClick={() => navigate('/travel')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.travel}</button></li>
-                <li><button onClick={() => navigate('/movie-theaters')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.movieTheaters}</button></li>
-                <li><button onClick={() => navigate('/functions')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.functions}</button></li>
-                <li><button onClick={() => `offers` in t && navigate('/offers')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.offers}</button></li>
-                <li><button onClick={() => navigate('/seller/dashboard')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{t.sellerPortal}</button></li>
+                <li><button onClick={() => navigate('/food-hub')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.foodHub === 'string' ? t.foodHub : 'Food Hub'}</button></li>
+                <li><button onClick={() => navigate('/dayout')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.dayout === 'string' ? t.dayout : 'Dayout'}</button></li>
+                <li><button onClick={() => navigate('/travel')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.travel === 'string' ? t.travel : 'Travel'}</button></li>
+                <li><button onClick={() => navigate('/movie-theaters')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.movieTheaters === 'string' ? t.movieTheaters : 'Movie Theaters'}</button></li>
+                <li><button onClick={() => navigate('/functions')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.functions === 'string' ? t.functions : 'Functions'}</button></li>
+                <li><button onClick={() => navigate('/offers')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.offers === 'string' ? t.offers : 'Offers'}</button></li>
+                <li><button onClick={() => navigate('/seller/dashboard')} className={`${isDark ? 'text-[#a0aec0] hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors text-left bg-transparent border-none cursor-pointer p-0 text-sm`}>{typeof t.sellerPortal === 'string' ? t.sellerPortal : 'Seller Portal'}</button></li>
               </ul>
             </div>
 
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-bold text-amber-500 tracking-widest uppercase">{t.contactUs}</h4>
+              <h4 className="text-xs font-bold text-amber-500 tracking-widest uppercase">{typeof t.contactUs === 'string' ? t.contactUs : 'Contact Us'}</h4>
               <ul className="space-y-3">
                 <li className="flex items-center gap-3">
                   <FaEnvelope className="text-amber-500 text-sm" />
@@ -535,7 +550,6 @@ const MainLayout = () => {
           </div>
         </footer>
 
-        {/* Fixed Back to Top Button (Outside Footer, completely static on screen) */}
         <button
             onClick={scrollToTop}
             title="Back to Top"

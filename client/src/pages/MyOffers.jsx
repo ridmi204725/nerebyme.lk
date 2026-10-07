@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import CategoryMenu from '../components/CategoryMenu';
@@ -34,12 +35,7 @@ const OffersPage = () => {
     // Toast notification state
     const [toast, setToast] = useState(null);
 
-    const showToast = (message, type = 'success') => {
-        setToast({ message, type });
-        setTimeout(() => {
-            setToast(null);
-        }, 4000);
-    };
+    const showToast = (message, type = 'success') => notify(type, message);
 
     const [mode, setMode] = useState(localStorage.getItem('mode') || 'dark');
 

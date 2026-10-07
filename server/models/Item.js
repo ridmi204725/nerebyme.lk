@@ -56,7 +56,8 @@ const itemSchema = new mongoose.Schema({
     date: { type: String, default: '' },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     userEmail: { type: String, default: '' },
-    userName: { type: String, default: '' }
+    userName: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now }
   }],
 
   // Food Hub / Restaurants Specific Fields

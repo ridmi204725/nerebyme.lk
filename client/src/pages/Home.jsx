@@ -224,6 +224,10 @@ const Home = () => {
   const isDark = mode === 'dark';
 
   useEffect(() => {
+    localStorage.setItem('homeVisited', 'true');
+  }, []);
+
+  useEffect(() => {
     const slideInterval = setInterval(() => {
       setCurrentSlide(s => (s + 1) % HERO_SLIDES.length);
     }, 4000);

@@ -1,6 +1,12 @@
 // backend/server.js
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Always load server/.env, even when Node is started from a different working directory.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 import express from 'express';
 import http from 'http';
@@ -17,10 +23,25 @@ import functionRoutes from './routes/functionRoutes.js';
 import movieRoutes from './routes/movieRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import sellerRoutes from './routes/sellerRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import itemRoutes from './routes/itemRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 // Model එක import කරගැනීම (ඔබේ database model එක ඇතිနေရာට අනුව මෙය වෙනස් විය හැක)
 import Item from './models/Item.js'; // හෝ Hotel Model එක
+
+// Fail early with a useful message instead of letting mongoose report "uri undefined".
+if (!process.env.MONGODB_URI) {
+    console.error('❌ MONGODB_URI is missing.');
+    console.error(`   Expected env file: ${path.join(__dirname, '.env')}`);
+    console.error('   Make sure the file is named exactly .env (not .emv/.env.txt) and contains MONGODB_URI=...');
+    process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+    console.error('❌ JWT_SECRET is missing. Add JWT_SECRET to server/.env');
+    process.exit(1);
+}
 
 // Connect to Database
 connectDB();
@@ -72,6 +93,8 @@ app.use('/api/movie-theaters', movieRoutes);
 app.use('/api/functions', functionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/seller', sellerRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/items', itemRoutes);
 
 // ── HOTELS & ITEMS GET ENDPOINTS (404 දෝෂය මඟහරවා ගැනීමට මෙහි එකතු කරන ලදී) ──
 

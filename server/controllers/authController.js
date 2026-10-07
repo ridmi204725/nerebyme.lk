@@ -363,9 +363,28 @@ export const googleLogin = async (req, res, next) => {
 
 export const getMe = async (req, res) => {
     try {
+        const userId = req.user?.id || req.user?._id;
+        const user = userId ? await User.findById(userId).select('fullName email phone birthday role points sellerStatus businessName businessContact isEmailVerified lastLoginAt') : null;
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'User session is no longer valid.' });
+        }
+
         res.status(200).json({
             success: true,
-            user: req.user
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                phone: user.phone,
+                birthday: user.birthday,
+                role: user.role || 'user',
+                points: user.points || 0,
+                sellerStatus: user.sellerStatus,
+                businessName: user.businessName,
+                businessContact: user.businessContact,
+                isEmailVerified: user.isEmailVerified,
+                lastLoginAt: user.lastLoginAt
+            }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

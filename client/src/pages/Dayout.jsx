@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -181,7 +182,7 @@ const Dayout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!localStorage.getItem('token')) { alert('Please login before adding a listing.'); return; }
+    if (!localStorage.getItem('token')) { notify('error', 'Please login before adding a listing.'); return; }
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(`${API_BASE_URL}/api/seller/items`, {

@@ -359,3 +359,143 @@ html, body {
     body { font-size: 14px; }
     .nm-listing-card { box-shadow: 0 10px 28px rgba(0,0,0,.13); }
 }
+
+/* =========================================================
+   Global user notification + light/dark design tokens
+   ========================================================= */
+:root {
+    --app-bg: #f8fafc;
+    --app-surface: rgba(255,255,255,.94);
+    --app-text: #0f172a;
+    --app-muted: #64748b;
+    --app-border: rgba(15,23,42,.12);
+}
+
+html[data-mode='dark'], body[data-mode='dark'] {
+    --app-bg: #0b0e14;
+    --app-surface: rgba(17,19,26,.96);
+    --app-text: #f8fafc;
+    --app-muted: #94a3b8;
+    --app-border: rgba(148,163,184,.16);
+}
+
+html[data-mode='light'], body[data-mode='light'] {
+    --app-bg: #f8fafc;
+    --app-surface: rgba(255,255,255,.96);
+    --app-text: #0f172a;
+    --app-muted: #64748b;
+    --app-border: rgba(15,23,42,.12);
+}
+
+html, body, #root {
+    min-height: 100%;
+}
+
+.nm-global-toast {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100000;
+    width: min(92vw, 560px);
+    pointer-events: none;
+    animation: nmToastIn .28s ease-out;
+}
+
+.nm-global-toast-inner {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 54px;
+    padding: 11px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+    box-shadow: 0 18px 45px rgba(0,0,0,.24), 0 4px 14px rgba(0,0,0,.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    font-size: clamp(.78rem, 1.2vw, .9rem);
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.nm-global-toast-inner.is-success { border-color: rgba(16,185,129,.35); }
+.nm-global-toast-inner.is-error { border-color: rgba(244,63,94,.38); }
+.nm-global-toast-inner.is-info { border-color: rgba(59,130,246,.38); }
+
+.nm-global-toast-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+}
+.nm-global-toast-inner.is-success .nm-global-toast-icon { color: #10b981; background: rgba(16,185,129,.12); }
+.nm-global-toast-inner.is-error .nm-global-toast-icon { color: #f43f5e; background: rgba(244,63,94,.12); }
+.nm-global-toast-inner.is-info .nm-global-toast-icon { color: #3b82f6; background: rgba(59,130,246,.12); }
+
+.nm-global-toast-text { flex: 1; min-width: 0; }
+.nm-global-toast-close {
+    border: 0;
+    background: transparent;
+    color: var(--app-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 28px;
+}
+.nm-global-toast-close:hover { background: rgba(148,163,184,.12); color: var(--app-text); }
+
+@keyframes nmToastIn {
+    from { opacity: 0; transform: translate(-50%, -14px) scale(.98); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@media (max-width: 640px) {
+    .nm-global-toast {
+        top: 12px;
+        width: calc(100vw - 24px);
+    }
+    .nm-global-toast-inner {
+        border-radius: 15px;
+        padding: 10px 12px;
+        min-height: 50px;
+    }
+}
+
+/* User-facing light-mode normalization. It is deliberately scoped to the MainLayout
+   content so the existing Admin Dashboard visual system is not altered. */
+.hd-root.hd-light .hd-main-content [class~="text-white"] { color: #0f172a !important; }
+.hd-root.hd-light .hd-main-content [class~="text-slate-100"] { color: #0f172a !important; }
+.hd-root.hd-light .hd-main-content [class~="text-slate-200"] { color: #1e293b !important; }
+.hd-root.hd-light .hd-main-content [class~="text-slate-300"] { color: #334155 !important; }
+.hd-root.hd-light .hd-main-content [class~="text-slate-400"] { color: #64748b !important; }
+.hd-root.hd-light .hd-main-content [class~="text-gray-300"] { color: #475569 !important; }
+.hd-root.hd-light .hd-main-content [class~="text-gray-400"] { color: #64748b !important; }
+.hd-root.hd-light .hd-main-content [class~="text-gray-500"] { color: #64748b !important; }
+
+.hd-root.hd-light .hd-main-content [class~="bg-slate-950"] { background-color: #ffffff !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-slate-900"] { background-color: #f1f5f9 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-slate-800"] { background-color: #e2e8f0 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#0f172a]"] { background-color: #f8fafc !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#1c1815]"] { background-color: #fffaf5 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#0d1b12]"] { background-color: #f3fbf6 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#09090b]"] { background-color: #f8fafc !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#111813]"] { background-color: #f8faf9 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#121216]"] { background-color: #f8fafc !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#18181b]"] { background-color: #f1f5f9 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#1b2e23]"] { background-color: #ecfdf5 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#1e293b]"] { background-color: #e2e8f0 !important; }
+.hd-root.hd-light .hd-main-content [class~="bg-[#2c2622]"] { background-color: #f1f5f9 !important; }
+
+.hd-root.hd-light .hd-main-content [class~="border-slate-800"] { border-color: #cbd5e1 !important; }
+.hd-root.hd-light .hd-main-content [class~="border-slate-700"] { border-color: #cbd5e1 !important; }
+.hd-root.hd-light .hd-main-content [class~="border-gray-800"] { border-color: #e2e8f0 !important; }

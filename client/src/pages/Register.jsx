@@ -6,13 +6,17 @@ import { FaUser, FaEnvelope, FaPhone, FaLock, FaEye, FaEyeSlash, FaSuitcaseRolli
 import { GiPalmTree } from 'react-icons/gi';
 import bluePlantIllustration from '../assets/blue-plant-illustration.png';
 import GoogleAccountModal from '../components/GoogleAccountModal';
+import { notify } from '../utils/notifications';
 
 const Register = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [mode, setMode] = useState(localStorage.getItem('mode') || 'dark');
     const [theme, setTheme] = useState(localStorage.getItem('selectedTheme') || 'theme-blue');
-    const [lang, setLang] = useState(localStorage.getItem('lang') || 'EN');
+    const [lang, setLang] = useState(() => {
+        const stored = localStorage.getItem('selectedLanguage') || localStorage.getItem('lang') || 'English';
+        return stored === 'Sinhala' || stored === 'SI' ? 'SI' : stored === 'Tamil' || stored === 'TA' ? 'TA' : 'EN';
+    });
 
     // Google Account Modal State
     const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
@@ -60,6 +64,8 @@ const Register = () => {
 
     useEffect(() => {
         localStorage.setItem('lang', lang);
+        localStorage.setItem('selectedLanguage', lang === 'SI' ? 'Sinhala' : lang === 'TA' ? 'Tamil' : 'English');
+        window.dispatchEvent(new Event('languageChange'));
     }, [lang]);
 
     useEffect(() => {
@@ -277,7 +283,7 @@ const Register = () => {
                             localStorage.setItem('registeredUser', userData.name);
                             setTimeout(() => navigate('/loading?to=/login'), 800);
                         } else {
-                            alert(backendData.error || 'Backend synchronization failed');
+                            notify('error', backendData.error || 'Backend synchronization failed');
                         }
                     } catch (err) {
                         console.error('Backend sync error:', err);
@@ -286,7 +292,7 @@ const Register = () => {
             });
             window.google.accounts.id.prompt();
         } else {
-            alert("Google Sign-In is still loading. Please refresh and try again.");
+            notify('error', "Google Sign-In is still loading. Please refresh and try again.");
         }
     };
 

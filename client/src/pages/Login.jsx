@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
     FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaSuitcaseRolling,
     FaPassport, FaCamera, FaCompass, FaFacebook, FaApple, FaMoon, FaSun,
@@ -10,13 +10,18 @@ import { GiPalmTree } from 'react-icons/gi';
 import { API_BASE_URL } from '../utils/api';
 import bluePlantIllustration from '../assets/blue-plant-illustration.png';
 import GoogleAccountModal from '../components/GoogleAccountModal';
+import { notify } from '../utils/notifications';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [showPassword, setShowPassword] = useState(false);
     const [mode, setMode] = useState(localStorage.getItem('mode') || 'dark');
     const [theme, setTheme] = useState(localStorage.getItem('selectedTheme') || 'theme-blue');
-    const [lang, setLang] = useState(localStorage.getItem('lang') || 'EN');
+    const [lang, setLang] = useState(() => {
+        const stored = localStorage.getItem('selectedLanguage') || localStorage.getItem('lang') || 'English';
+        return stored === 'Sinhala' || stored === 'SI' ? 'SI' : stored === 'Tamil' || stored === 'TA' ? 'TA' : 'EN';
+    });
 
     // Custom Toast Notification සඳහා state එක
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -40,12 +45,7 @@ const Login = () => {
     });
 
     // Custom Toast පණිවිඩ පෙන්වීම සඳහා වන Helper function එක
-    const showNotification = (type, text) => {
-        setMessage({ type, text });
-        setTimeout(() => {
-            setMessage({ type: '', text: '' });
-        }, 3500); // තත්පර 3.5 කින් පණිවිඩය ස්වයංක්‍රීයව අතුරුදහන් වේ
-    };
+    const showNotification = (type, text) => notify(type, text);
 
     const decodeJwt = (token) => {
         const base64Url = token.split('.')[1];
@@ -73,6 +73,8 @@ const Login = () => {
 
     useEffect(() => {
         localStorage.setItem('lang', lang);
+        localStorage.setItem('selectedLanguage', lang === 'SI' ? 'Sinhala' : lang === 'TA' ? 'Tamil' : 'English');
+        window.dispatchEvent(new Event('languageChange'));
     }, [lang]);
 
     useEffect(() => {
@@ -166,12 +168,13 @@ const Login = () => {
                     showNotification('success', 'පුරනය වීම සාර්ථකයි! සාදරයෙන් පිළිගනිමු.');
 
                     setTimeout(() => {
+                        const requestedPath = location.state?.from;
                         if (data.user.role === 'admin') {
-                            navigate('/admin/dashboard');
+                            navigate('/admin/dashboard', { replace: true });
                         } else {
-                            navigate('/welcome');
+                            navigate(requestedPath && requestedPath !== '/login' ? requestedPath : '/home', { replace: true });
                         }
-                    }, 1000);
+                    }, 900);
 
                 } else {
                     showNotification('error', data.message || data.error || 'Login failed');
@@ -246,7 +249,7 @@ const Login = () => {
                                 if (backendData.user?.role === 'admin') {
                                     navigate('/admin/dashboard');
                                 } else {
-                                    navigate('/welcome');
+                                    navigate(location.state?.from && location.state.from !== '/login' ? location.state.from : '/home', { replace: true });
                                 }
                             }, 1000);
 
@@ -286,7 +289,7 @@ const Login = () => {
             if (savedRole === 'admin') {
                 navigate('/admin/dashboard');
             } else {
-                navigate('/welcome');
+                navigate(location.state?.from && location.state.from !== '/login' ? location.state.from : '/home', { replace: true });
             }
         }, 800);
     };

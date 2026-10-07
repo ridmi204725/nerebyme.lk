@@ -14,7 +14,7 @@ Implemented:
 
 ## Environment
 
-Copy `server/.env.example` to `server/.env` and fill in:
+Copy `server/.env` to `server/.env` and fill in:
 - MongoDB URI
 - JWT secret
 - SMTP/Gmail credentials

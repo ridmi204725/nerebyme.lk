@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../utils/api';
+import { notify } from '../utils/notifications';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -82,7 +83,7 @@ const SellerDashboard = () => {
         setUserPoints(res.data.points);
       }
 
-      alert("Submission successful! Your listing has been submitted for Admin approval. You earned +1 point!");
+      notify('success', "Submission successful! Your listing has been submitted for Admin approval. You earned +1 point!");
       setIsModalOpen(false);
       setFormData({
         name: '', category: 'food-hub', subCategory: 'Restaurant', location: '', district: 'Colombo',
@@ -90,7 +91,7 @@ const SellerDashboard = () => {
       });
       fetchSellerItems();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to submit listing");
+      notify('error', err.response?.data?.message || "Failed to submit listing");
     }
   };
 

@@ -234,52 +234,66 @@ export const updateItem = async (req, res) => {
   }
 };
 
-// @desc    Add review to an item
+// @desc    Add a review/comment to an approved item for the authenticated user
 export const addReview = async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid Item ID format" });
+      return res.status(400).json({ success: false, message: 'Invalid item ID format.' });
     }
 
-    const { name, rating, comment, date } = req.body;
+    const comment = String(req.body?.comment || req.body?.review || '').trim();
+    const rating = Number(req.body?.rating);
+    const userId = req.user?.id || req.user?._id;
 
-    const item = await Item.findById(id);
-    if (!item) {
-      return res.status(404).json({ success: false, message: 'Item not found' });
+    if (!comment) {
+      return res.status(400).json({ success: false, message: 'Please enter a comment.' });
+    }
+    if (comment.length > 1000) {
+      return res.status(400).json({ success: false, message: 'Comment must be 1000 characters or fewer.' });
+    }
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5.' });
     }
 
-    if (!item.reviews) {
-      item.reviews = [];
-    }
+    const [item, user] = await Promise.all([
+      Item.findById(id),
+      userId ? User.findById(userId).select('fullName email') : null
+    ]);
 
-    const numericRating = Number(rating) || 5;
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+    if (!item.isApproved) return res.status(403).json({ success: false, message: 'This listing is not available for reviews yet.' });
+    if (!user) return res.status(401).json({ success: false, message: 'Your session is invalid. Please log in again.' });
+
+    if (!Array.isArray(item.reviews)) item.reviews = [];
+
+    const reviewerName = String(user.fullName || req.body?.name || 'User').trim();
+    const reviewerEmail = String(user.email || '').trim().toLowerCase();
+
     const newReview = {
-      name: name || 'Guest',
-      rating: numericRating,
-      comment: comment || '',
-      review: comment || '',
-      date: date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      userId: req.user?.id || req.user?._id || null,
-      userEmail: req.user?.email || '',
-      userName: req.user?.fullName || name || 'Guest'
+      name: reviewerName,
+      userName: reviewerName,
+      userEmail: reviewerEmail,
+      userId: user._id,
+      rating: Math.round(rating * 10) / 10,
+      comment,
+      review: comment,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     };
 
     item.reviews.unshift(newReview);
-
-    const totalRating = item.reviews.reduce((acc, rev) => acc + (rev.rating || 5), 0);
-    item.rating = Number((totalRating / item.reviews.length).toFixed(1));
+    item.rating = Number((item.reviews.reduce((sum, review) => sum + (Number(review.rating) || 5), 0) / item.reviews.length).toFixed(1));
     item.reviewsCount = item.reviews.length;
 
     await item.save();
 
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
-      message: 'Review added successfully',
+      message: 'Review added successfully.',
       data: item.reviews
     });
   } catch (error) {
-    console.error("Error adding review:", error);
+    console.error('Error adding review:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -290,6 +304,7 @@ export const getAllReviews = async (req, res) => {
     const items = await Item.find({ 'reviews.0': { $exists: true } })
       .select('name category reviews createdBy')
       .populate('createdBy', 'fullName email');
+
     const reviews = [];
     for (const item of items) {
       for (const review of (item.reviews || [])) {
@@ -301,56 +316,96 @@ export const getAllReviews = async (req, res) => {
         });
       }
     }
-    reviews.sort((a, b) => String(b.review.date || '').localeCompare(String(a.review.date || '')));
+
+    reviews.sort((a, b) => {
+      const aTime = a.review?.createdAt ? new Date(a.review.createdAt).getTime() : 0;
+      const bTime = b.review?.createdAt ? new Date(b.review.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
     return res.json({ success: true, count: reviews.length, data: reviews });
   } catch (error) {
+    console.error('Get all reviews error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// @desc Admin edit a user review/comment
 export const updateReview = async (req, res) => {
   try {
     const { id, reviewId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(reviewId)) {
       return res.status(400).json({ success: false, message: 'Invalid item/review ID.' });
     }
-    const { name, comment, rating, date } = req.body;
+
     const item = await Item.findOne({ _id: id, 'reviews._id': reviewId });
     if (!item) return res.status(404).json({ success: false, message: 'Review not found.' });
+
     const review = item.reviews.id(reviewId);
-    if (name !== undefined) review.name = String(name).trim();
-    if (comment !== undefined) {
-      review.comment = String(comment);
-      review.review = String(comment);
+    if (!review) return res.status(404).json({ success: false, message: 'Review not found.' });
+
+    if (req.body.name !== undefined) {
+      const name = String(req.body.name).trim();
+      if (!name) return res.status(400).json({ success: false, message: 'Reviewer name cannot be empty.' });
+      review.name = name;
+      review.userName = name;
     }
-    if (rating !== undefined) review.rating = Math.min(5, Math.max(1, Number(rating) || 5));
-    if (date !== undefined) review.date = date;
-    await item.save();
-    item.rating = item.reviews.length ? Number((item.reviews.reduce((a, r) => a + (Number(r.rating) || 5), 0) / item.reviews.length).toFixed(1)) : 5;
+
+    if (req.body.comment !== undefined || req.body.review !== undefined) {
+      const comment = String(req.body.comment ?? req.body.review ?? '').trim();
+      if (!comment) return res.status(400).json({ success: false, message: 'Comment cannot be empty.' });
+      if (comment.length > 1000) return res.status(400).json({ success: false, message: 'Comment must be 1000 characters or fewer.' });
+      review.comment = comment;
+      review.review = comment;
+    }
+
+    if (req.body.rating !== undefined) {
+      const rating = Number(req.body.rating);
+      if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+        return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5.' });
+      }
+      review.rating = Math.round(rating * 10) / 10;
+    }
+
+    if (req.body.date !== undefined) review.date = String(req.body.date);
+
+    item.rating = item.reviews.length
+      ? Number((item.reviews.reduce((sum, current) => sum + (Number(current.rating) || 5), 0) / item.reviews.length).toFixed(1))
+      : 5;
     item.reviewsCount = item.reviews.length;
+
     await item.save();
     return res.json({ success: true, message: 'Review updated successfully.', data: review });
   } catch (error) {
+    console.error('Update review error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// @desc Admin delete a user review/comment
 export const deleteReview = async (req, res) => {
   try {
     const { id, reviewId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(reviewId)) {
       return res.status(400).json({ success: false, message: 'Invalid item/review ID.' });
     }
+
     const item = await Item.findById(id);
     if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+
     const review = item.reviews.id(reviewId);
     if (!review) return res.status(404).json({ success: false, message: 'Review not found.' });
-    review.deleteOne();
+
+    item.reviews.pull(reviewId);
     item.reviewsCount = item.reviews.length;
-    item.rating = item.reviews.length ? Number((item.reviews.reduce((a, r) => a + (Number(r.rating) || 5), 0) / item.reviews.length).toFixed(1)) : 5;
+    item.rating = item.reviews.length
+      ? Number((item.reviews.reduce((sum, current) => sum + (Number(current.rating) || 5), 0) / item.reviews.length).toFixed(1))
+      : 5;
+
     await item.save();
     return res.json({ success: true, message: 'Review deleted successfully.' });
   } catch (error) {
+    console.error('Delete review error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

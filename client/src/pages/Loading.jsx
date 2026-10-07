@@ -17,7 +17,7 @@ const Loading = () => {
 
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
-        const nextPath = queryParams.get('to') || '/login';
+        const explicitPath = queryParams.get('to');
 
         const interval = setInterval(() => {
             setProgress((oldProgress) => {
@@ -28,13 +28,43 @@ const Loading = () => {
                 const diff = Math.random() * 20;
                 return Math.min(oldProgress + diff, 100);
             });
-        }, 300);
+        }, 220);
 
-        const timer = setTimeout(() => {
-            navigate(nextPath);
-        }, 3000);
+        const resolveEntry = async () => {
+            if (explicitPath) return explicitPath;
+
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? `${window.location.protocol}//${window.location.hostname}:5001` : '');
+                    const response = await fetch(`${base}/api/auth/me`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (response.ok && data.success) {
+                        localStorage.setItem('registeredUser', data.user?.fullName || localStorage.getItem('registeredUser') || 'Traveler');
+                        localStorage.setItem('userEmail', data.user?.email || localStorage.getItem('userEmail') || '');
+                        localStorage.setItem('userRole', data.user?.role || 'user');
+                        return data.user?.role === 'admin' ? '/admin/dashboard' : '/home';
+                    }
+                } catch (_) {}
+                localStorage.removeItem('token');
+            }
+
+            // A returning registered user who has logged out goes to Login.
+            // A completely new visitor always sees Home first.
+            const hasRegisteredIdentity = Boolean(localStorage.getItem('registeredUser') && localStorage.getItem('userEmail'));
+            return hasRegisteredIdentity ? '/login' : '/home';
+        };
+
+        let cancelled = false;
+        const timer = setTimeout(async () => {
+            const nextPath = await resolveEntry();
+            if (!cancelled) navigate(nextPath, { replace: true });
+        }, 1800);
 
         return () => {
+            cancelled = true;
             clearInterval(interval);
             clearTimeout(timer);
         };
