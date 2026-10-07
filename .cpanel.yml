@@ -2,7 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/nearpcju/public_html/
-    - cd /home/nearpcju/nerebyme/client
-    - npm install
-    - npm run build
-    - /bin/cp -R dist/* $DEPLOYPATH
+    - /bin/cp -R client/* $DEPLOYPATH
