@@ -2,4 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/nearpcju/public_html/
-    - /bin/cp -R client/* $DEPLOYPATH
+    - /bin/cp -R client/dist/* $DEPLOYPATH
