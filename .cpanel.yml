@@ -1,8 +1,4 @@
 ---
 deployment:
   tasks:
-    - /bin/echo "START DEPLOYMENT"
-    - cd /home/nearpcju/nerebyme-clean/client
-    - /bin/echo "IN CLIENT"
-    - npm --version
-    - node --version
+    - /bin/echo "DEPLOYMENT TEST"
