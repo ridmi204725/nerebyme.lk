@@ -1,5 +1,8 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/nearpcju/public_html/
-    - /bin/cp -R client/dist/* $DEPLOYPATH
+    - /bin/echo "START DEPLOYMENT"
+    - cd /home/nearpcju/nerebyme-clean/client
+    - /bin/echo "IN CLIENT"
+    - npm --version
+    - node --version
